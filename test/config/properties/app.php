@@ -15,5 +15,5 @@ return [
             'timeout' => 3000
         ]
     ],
-    'db' => require dirname(__FILE__) . DS . "db.php",
+    'cache' => require dirname(__FILE__) . DS . "cache.php",
 ];
