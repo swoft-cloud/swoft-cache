@@ -5,8 +5,7 @@ namespace Swoft\Cache;
 use Swoft\App;
 
 /**
- * cache
- *
+ * Cache
  * @method string|bool get($key, $default = null)
  * @method bool set($key, $value, $ttl = null)
  * @method int delete($key)
@@ -15,14 +14,8 @@ use Swoft\App;
  * @method bool setMultiple($values, $ttl = null)
  * @method int deleteMultiple($keys)
  * @method int has($key)
- *
- * @uses      Cache
- * @version   2018年01月04日
- * @author    stelin <phpcrazy@126.com>
- * @copyright Copyright 2010-2016 swoft software
- * @license   PHP Version 7.x {@link http://www.php.net/license/3_0.txt}
  */
-class Cache
+class Cache implements CacheInterface
 {
     /**
      * @var string
@@ -38,34 +31,32 @@ class Cache
      * get cache by driver
      *
      * @param string|null $driver
-     *
      * @throws \InvalidArgumentException
-     *
-     * @return CacheInterface
+     * @return DriverInterface
      */
-    public function getCache(string $driver = null): CacheInterface
+    public function getCache(string $driver = null): DriverInterface
     {
         $cacheDriver = $this->driver;
-        $drivers     = $this->mergeDrivers();
+        $drivers = $this->mergeDrivers();
 
-        if ($driver != null) {
+        if ($driver !== null) {
             $cacheDriver = $driver;
         }
 
-        if (!isset($drivers[$cacheDriver])) {
-            throw new \InvalidArgumentException("the driver of cache is not exist! driver=" . $cacheDriver);
+        if (! isset($drivers[$cacheDriver])) {
+            throw new \InvalidArgumentException(sprintf('Cache driver %s not exist', $cacheDriver));
         }
+
+        //TODO If driver component not loaded, throw an exception.
 
         return App::getBean($drivers[$cacheDriver]);
     }
 
     /**
-     * magic method
-     *
      * @param string $method
      * @param array  $arguments
-     *
      * @return mixed
+     * @throws \InvalidArgumentException
      */
     public function __call($method, $arguments)
     {
@@ -79,20 +70,18 @@ class Cache
      *
      * @return array
      */
-    private function mergeDrivers()
+    private function mergeDrivers(): array
     {
         return array_merge($this->drivers, $this->defaultDrivers());
     }
 
     /**
-     * the drivers of default
+     * Defult drivers
      *
      * @return array
      */
-    private function defaultDrivers()
+    private function defaultDrivers(): array
     {
-        return [
-
-        ];
+        return [];
     }
 }

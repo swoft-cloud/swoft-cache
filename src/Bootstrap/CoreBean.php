@@ -16,7 +16,7 @@ class CoreBean implements BootBeanIntereface
     /**
      * @return array
      */
-    public function beans()
+    public function beans(): array
     {
         return [
             'cache' => [
