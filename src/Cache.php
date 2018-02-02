@@ -15,7 +15,7 @@ use Swoft\App;
  * @method int deleteMultiple($keys)
  * @method int has($key)
  */
-class Cache implements CacheInterface
+class Cache
 {
     /**
      * @var string
