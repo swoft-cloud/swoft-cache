@@ -11,7 +11,7 @@ use Psr\SimpleCache\CacheInterface;
  * @method bool clear()
  * @method array getMultiple($keys, $default = null)
  * @method bool setMultiple($values, $ttl = null)
- * @method int deleteMultiple($keys)
+ * @method bool deleteMultiple($keys)
  * @method int has($key)
  */
 class Cache
