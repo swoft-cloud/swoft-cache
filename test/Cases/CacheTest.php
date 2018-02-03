@@ -75,11 +75,16 @@ class CacheTest extends AbstractTestCase
         $this->assertFalse($hasResult);
 
         /**
-         * setMultiple
+         * setMultiple & getMultiple
          */
-        $cache->setMultiple([
+        $multiple = [
             'key1' => 'value1',
             'key2' => 'value2',
-        ]);
+        ];
+        $setMulResult = $cache->setMultiple($multiple);
+        $this->assertTrue($setMulResult);
+        $getMulResult = $cache->getMultiple(['key1', 'key2']);
+        $this->assertEquals($multiple, $getMulResult);
+
     }
 }
