@@ -4,14 +4,14 @@ namespace Swoft\Cache\Bootstrap;
 
 use Swoft\Bean\Annotation\BootBean;
 use Swoft\Cache\Cache;
-use Swoft\Core\BootBeanIntereface;
+use Swoft\Core\BootBeanInterface;
 
 /**
  * The core bean of cache
  *
  * @BootBean()
  */
-class CoreBean implements BootBeanIntereface
+class CoreBean implements BootBeanInterface
 {
     /**
      * @return array

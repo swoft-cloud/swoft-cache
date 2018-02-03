@@ -15,7 +15,7 @@ use Swoft\App;
  * @method int deleteMultiple($keys)
  * @method int has($key)
  */
-class Cache
+class Cache implements CacheInterface
 {
     /**
      * @var string
@@ -32,24 +32,24 @@ class Cache
      *
      * @param string|null $driver
      * @throws \InvalidArgumentException
-     * @return DriverInterface
+     * @return CacheInterface
      */
-    public function getCache(string $driver = null): DriverInterface
+    public function getDriver(string $driver = null): CacheInterface
     {
-        $cacheDriver = $this->driver;
+        $currentDriver = $this->driver;
         $drivers = $this->mergeDrivers();
 
         if ($driver !== null) {
-            $cacheDriver = $driver;
+            $currentDriver = $driver;
         }
 
-        if (! isset($drivers[$cacheDriver])) {
-            throw new \InvalidArgumentException(sprintf('Cache driver %s not exist', $cacheDriver));
+        if (! isset($drivers[$currentDriver])) {
+            throw new \InvalidArgumentException(sprintf('Cache driver %s not exist', $currentDriver));
         }
 
         //TODO If driver component not loaded, throw an exception.
 
-        return App::getBean($drivers[$cacheDriver]);
+        return App::getBean($drivers[$currentDriver]);
     }
 
     /**
@@ -60,9 +60,8 @@ class Cache
      */
     public function __call($method, $arguments)
     {
-        $cache = $this->getCache();
-
-        return $cache->$method(...$arguments);
+        $driver = $this->getDriver();
+        return $driver->$method(...$arguments);
     }
 
     /**
