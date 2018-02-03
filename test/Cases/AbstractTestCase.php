@@ -1,6 +1,6 @@
 <?php
 
-namespace SwoftvTest\Cache;
+namespace SwoftTest\Cache;
 
 use PHPUnit\Framework\TestCase;
 

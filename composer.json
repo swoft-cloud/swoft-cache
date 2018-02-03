@@ -30,10 +30,6 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/swoft-cloud/swoft-cache"
-        },
-        {
-            "type": "vcs",
             "url": "https://github.com/swoft-cloud/swoft-redis"
         },
         {
