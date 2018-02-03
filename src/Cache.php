@@ -27,6 +27,12 @@ class Cache
     private $drivers = [];
 
     /**
+     * TODO add serializer mechanism
+     * @var null|string
+     */
+    private $serializer = null;
+
+    /**
      * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
      *
      * @param  string                $key   The key of the item to store.
