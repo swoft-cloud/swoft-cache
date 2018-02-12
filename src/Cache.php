@@ -65,6 +65,7 @@ class Cache
         $availableMethods = [
             'has',
             'get',
+            'set',
             'delete',
             'getMultiple',
             'setMultiple',
@@ -72,7 +73,7 @@ class Cache
             'clear',
         ];
         if (! \in_array($method, $availableMethods, true)) {
-            throw new \RuntimeException('Method not exist');
+            throw new \RuntimeException(sprintf('Method not exist, method=%s', $method));
         }
         $driver = $this->getDriver();
         return $driver->$method(...$arguments);
