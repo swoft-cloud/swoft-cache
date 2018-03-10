@@ -16,6 +16,9 @@ class CacheDataResult extends AbstractDataResult
      */
     public function getResult(...$params)
     {
+        if($this->pool !== null && $this->connection !== null){
+            $this->pool->release($this->connection);
+        }
         return $this->data;
     }
 }
