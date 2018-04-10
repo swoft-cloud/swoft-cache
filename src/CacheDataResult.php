@@ -2,12 +2,12 @@
 
 namespace Swoft\Cache;
 
-use Swoft\Core\AbstractDataResult;
+use Swoft\Core\AbstractResult;
 
 /**
- * The result of data
+ * CacheDataResult
  */
-class CacheDataResult extends AbstractDataResult
+class CacheDataResult extends AbstractResult
 {
     /**
      * @param array ...$params
@@ -17,6 +17,6 @@ class CacheDataResult extends AbstractDataResult
     public function getResult(...$params)
     {
         $this->release();
-        return $this->data;
+        return $this->result;
     }
 }

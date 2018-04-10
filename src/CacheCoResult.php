@@ -2,12 +2,12 @@
 
 namespace Swoft\Cache;
 
-use Swoft\Core\AbstractCoResult;
+use Swoft\Core\AbstractResult;
 
 /**
  * The result of cor
  */
-class CacheCoResult extends AbstractCoResult
+class CacheCoResult extends AbstractResult
 {
     /**
      * @param array ...$params
