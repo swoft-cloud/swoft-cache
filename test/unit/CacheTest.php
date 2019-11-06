@@ -2,16 +2,16 @@
 
 namespace SwoftTest\Cache;
 
+use PHPUnit\Framework\TestCase;
 use Swoft\Cache\Cache;
 
-class CacheTest extends AbstractTestCase
+class CacheTest extends TestCase
 {
-
     /**
      * @test
-     * @requires extention redis
+     * @requires extension redis
      */
-    public function cache()
+    public function cache(): void
     {
         $cache = new Cache();
         $key = 'test:key';
@@ -85,6 +85,5 @@ class CacheTest extends AbstractTestCase
         $this->assertTrue($setMulResult);
         $getMulResult = $cache->getMultiple(['key1', 'key2']);
         $this->assertEquals($multiple, $getMulResult);
-
     }
 }

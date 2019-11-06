@@ -2,12 +2,14 @@
 
 namespace Swoft\Cache\Exception;
 
-use Swoft\Exception\Exception;
+use RuntimeException;
 
 /**
- * Base exception of Cache component
+ * Class CacheException
+ *
+ * @since 2.0.7
  */
-class CacheException extends Exception
+class CacheException extends RuntimeException
 {
 
 }
