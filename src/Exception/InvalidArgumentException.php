@@ -9,7 +9,7 @@ use RuntimeException;
  *
  * @since 2.0.7
  */
-class CacheException extends RuntimeException implements \Psr\SimpleCache\CacheException
+class InvalidArgumentException extends RuntimeException implements \Psr\SimpleCache\InvalidArgumentException
 {
 
 }

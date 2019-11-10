@@ -1,8 +1,7 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace Swoft\Cache;
 
-use Swoft\App;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -94,8 +93,7 @@ class Cache
 
         //TODO If driver component not loaded, throw an exception.
 
-        $bean = App::getBean($drivers[$currentDriver]);
-        return $bean;
+        return \Swoft::getBean($drivers[$currentDriver]);
     }
 
     /**
@@ -107,7 +105,7 @@ class Cache
     }
 
     /**
-     * Defult drivers
+     * Default drivers
      *
      * @return array
      */
