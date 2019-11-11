@@ -1,31 +1,50 @@
 <?php declare(strict_types=1);
 
-namespace Swoft\Cache\Handler;
+namespace Swoft\Cache\Adapter;
 
-use RuntimeException;
-use Swoft\Co;
-use function extension_loaded;
+use Swoft\Cache\Concern\AbstractAdapter;
+use Swoft\Stdlib\Helper\Dir;
+use function file_exists;
+use function file_get_contents;
+use function file_put_contents;
+use function filemtime;
+use function glob;
+use function is_dir;
+use function time;
+use function unlink;
 
 /**
- * Class CoFileHandler
- *
- * @since 2.0.7
+ * Class FileAdapter
  */
-class CoFileHandler extends FileHandler
+class FileAdapter extends AbstractAdapter
 {
     /**
-     * @return bool
+     * @var string
      */
-    public static function isSupported(): bool
+    private $savePath = '/tmp/swoft-caches';
+
+    /**
+     * Init $savePath directory
+     */
+    public function init(): void
     {
-        return extension_loaded('swoole');
+        if (!is_dir($this->savePath)) {
+            Dir::make($this->savePath);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function open(string $savePath, string $sessionName): bool
+    {
+        return true;
     }
 
     /**
      * @param string $id
      *
      * @return string
-     * @throws RuntimeException
      */
     public function read(string $id): string
     {
@@ -40,7 +59,7 @@ class CoFileHandler extends FileHandler
             return '';
         }
 
-        return Co::readFile($file);
+        return (string)file_get_contents($file);
     }
 
     /**
@@ -51,7 +70,77 @@ class CoFileHandler extends FileHandler
      */
     public function write(string $id, string $data): bool
     {
-        return Co::writeFile($this->getSessionFile($id), $data) !== false;
+        return file_put_contents($this->getSessionFile($id), $data) !== false;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return bool
+     */
+    public function destroy(string $id): bool
+    {
+        $file = $this->getSessionFile($id);
+        if (file_exists($file)) {
+            return unlink($file);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param int $maxLifetime
+     *
+     * @return bool
+     */
+    public function gc(int $maxLifetime): bool
+    {
+        $curTime = time();
+
+        foreach (glob("{$this->savePath}/{$this->prefix}*") as $file) {
+            if (file_exists($file) && (filemtime($file) + $maxLifetime) < $curTime) {
+                unlink($file);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Close the session, will clear all session data.
+     *
+     * @return bool
+     */
+    public function close(): bool
+    {
+        // return $this->gc(-1);
+        return true;
+    }
+
+    /**
+     * @param string $id
+     *
+     * @return string
+     */
+    protected function getSessionFile(string $id): string
+    {
+        return $this->savePath . '/' . $this->prefix . $id;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSavePath(): string
+    {
+        return $this->savePath;
+    }
+
+    /**
+     * @param string $savePath
+     */
+    public function setSavePath(string $savePath): void
+    {
+        $this->savePath = $savePath;
     }
 
     /**
@@ -112,23 +201,23 @@ class CoFileHandler extends FileHandler
      */
     public function clear(): bool
     {
-        // TODO: Implement clear() method.
+        foreach (glob("{$this->savePath}/{$this->prefix}*") as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
+
+        return true;
     }
 
     /**
-     * Fetches a value from the cache.
-     *
-     * @param string $key     The unique key of this item in the cache.
-     * @param mixed  $default Default value to return if the key does not exist.
-     *
-     * @return mixed The value of the item from the cache, or $default in case of cache miss.
-     *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if the $key string is not a legal value.
+     * {@inheritDoc}
      */
     public function get($key, $default = null)
     {
-        // TODO: Implement get() method.
+        $this->checkKey($key);
+
+
     }
 
     /**

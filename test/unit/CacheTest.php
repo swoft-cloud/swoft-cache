@@ -13,13 +13,13 @@ class CacheTest extends TestCase
      */
     public function cache(): void
     {
-        $cache = new Cache();
-        $key = 'test:key';
+        $cache       = new Cache();
+        $key         = 'test:key';
         $stringValue = 'value';
-        $intValue = 1;
-        $floatValue = 1.234;
-        $boolValue = false;
-        $arrayValue = ['int' => 1, 'float' => 1.234, 'bool' => true, 'string' => 'value'];
+        $intValue    = 1;
+        $floatValue  = 1.234;
+        $boolValue   = false;
+        $arrayValue  = ['int' => 1, 'float' => 1.234, 'bool' => true, 'string' => 'value'];
 
         /**
          * Set & Get
@@ -77,7 +77,7 @@ class CacheTest extends TestCase
         /**
          * setMultiple & getMultiple
          */
-        $multiple = [
+        $multiple     = [
             'key1' => 'value1',
             'key2' => 'value2',
         ];

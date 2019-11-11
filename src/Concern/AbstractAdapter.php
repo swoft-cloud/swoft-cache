@@ -2,18 +2,19 @@
 
 namespace Swoft\Cache\Concern;
 
+use Swoft\Cache\Contract\CacheAdapterInterface;
 use Swoft\Cache\Exception\InvalidArgumentException;
 use Swoft\Contract\EncrypterInterface;
-use Swoft\Cache\Contract\CacheHandlerInterface;
+use Swoft\Serialize\Contract\SerializerInterface;
 use function is_array;
 use function is_string;
 
 /**
- * Class AbstractHandler
+ * Class AbstractAdapter
  *
  * @since 2.0.7
  */
-abstract class AbstractHandler implements CacheHandlerInterface
+abstract class AbstractAdapter implements CacheAdapterInterface
 {
     /**
      * The prefix for session key
@@ -28,11 +29,18 @@ abstract class AbstractHandler implements CacheHandlerInterface
     private $encrypt = false;
 
     /**
-     * TODO The encrypter instance. for encrypt session data
+     * TODO The encrypter instance. for encrypt data
      *
      * @var EncrypterInterface
      */
     protected $encrypter;
+
+    /**
+     * Data serializer
+     *
+     * @var null|SerializerInterface
+     */
+    protected $serializer;
 
     /**
      * @return bool
@@ -102,5 +110,21 @@ abstract class AbstractHandler implements CacheHandlerInterface
     public function setPrefix(string $prefix): void
     {
         $this->prefix = $prefix;
+    }
+
+    /**
+     * @return SerializerInterface|null
+     */
+    public function getSerializer(): ?SerializerInterface
+    {
+        return $this->serializer;
+    }
+
+    /**
+     * @param SerializerInterface $serializer
+     */
+    public function setSerializer(SerializerInterface $serializer): void
+    {
+        $this->serializer = $serializer;
     }
 }

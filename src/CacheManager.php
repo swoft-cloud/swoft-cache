@@ -3,6 +3,8 @@
 namespace Swoft\Cache;
 
 use Psr\SimpleCache\CacheInterface;
+use Swoft\Redis\Pool;
+use Swoft\Serialize\Contract\SerializerInterface;
 
 /**
  * @method string|bool get($key, $default = null)
@@ -13,24 +15,27 @@ use Psr\SimpleCache\CacheInterface;
  * @method bool deleteMultiple($keys)
  * @method int has($key)
  */
-class Cache
+class CacheManager // implements CacheInterface
 {
     /**
+     * Current used cache adapter driver
+     *
      * @var string
      */
-    private $driver = 'redis';
+    private $adapter = 'redis';
 
     /**
      * @var array
      */
-    private $drivers = [];
+    private $adapters = [];
 
     /**
-     * TODO add serializer mechanism
-     *
-     * @var null|string
+     * Init cache manager
      */
-    private $serializer = null;
+    public function init(): void
+    {
+
+    }
 
     /**
      * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
@@ -43,16 +48,11 @@ class Cache
      *
      * @return bool True on success and false on failure.
      * @throws \InvalidArgumentException If the $value string is not a legal value
+     * @throws \Psr\SimpleCache\InvalidArgumentException
      */
     public function set(string $key, $value, $ttl = null): bool
     {
-        $valueType = \gettype($value);
-        if (!\in_array($valueType, ['integer', 'double', 'boolean', 'string'], true)) {
-            // TODO add serializer mechanism handle the other type
-            throw new \InvalidArgumentException('Invalid value type');
-        }
-
-        return $this->getDriver()->set($key, $value, $ttl);
+        return $this->getAdapter()->set($key, $value, $ttl);
     }
 
     /**
@@ -78,7 +78,7 @@ class Cache
         if (!\in_array($method, $availableMethods, true)) {
             throw new \RuntimeException(sprintf('Method not exist, method=%s', $method));
         }
-        $driver = $this->getDriver();
+        $driver = $this->getAdapter();
         return $driver->$method(...$arguments);
     }
 
@@ -88,10 +88,10 @@ class Cache
      * @return CacheInterface
      * @throws \InvalidArgumentException When driver does not exist
      */
-    public function getDriver(string $driver = null): CacheInterface
+    public function getAdapter(string $driver = null): CacheInterface
     {
-        $currentDriver = $driver ?? $this->driver;
-        $drivers       = $this->getDrivers();
+        $currentDriver = $driver ?? $this->adapter;
+        $drivers       = $this->getAdapters();
         if (!isset($drivers[$currentDriver])) {
             throw new \InvalidArgumentException(sprintf('Driver %s not exist', $currentDriver));
         }
@@ -104,9 +104,17 @@ class Cache
     /**
      * @return array
      */
-    private function getDrivers(): array
+    public function getAdapters(): array
     {
-        return array_merge($this->drivers, $this->defaultDrivers());
+        return array_merge($this->adapters, $this->defaultDrivers());
+    }
+
+    /**
+     * @param string $adapter
+     */
+    public function setAdapter(string $adapter): void
+    {
+        $this->adapter = $adapter;
     }
 
     /**
@@ -114,10 +122,10 @@ class Cache
      *
      * @return array
      */
-    private function defaultDrivers(): array
+    public function defaultDrivers(): array
     {
         return [
-            'redis' => \Swoft\Redis\Redis::class,
+            'redis' => Pool::class,
         ];
     }
 }

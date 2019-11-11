@@ -5,11 +5,11 @@ namespace Swoft\Cache\Contract;
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * Interface CacheHandlerInterface
+ * Interface CacheAdapterInterface
  *
  * @since 2.0.7
  */
-interface CacheHandlerInterface extends CacheInterface
+interface CacheAdapterInterface extends CacheInterface
 {
     /**
      * @param string $key
@@ -35,8 +35,8 @@ interface CacheHandlerInterface extends CacheInterface
     public function delete($key): bool;
 
     /**
-     * @param array $values
-     * @param null|integer   $ttl
+     * @param array        $values
+     * @param null|integer $ttl
      *
      * @return bool
      */

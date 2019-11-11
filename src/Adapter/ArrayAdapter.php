@@ -1,39 +1,23 @@
 <?php declare(strict_types=1);
 
-namespace Swoft\Cache\Handler;
+namespace Swoft\Cache\Adapter;
 
 use DateInterval;
-use Swoft\Cache\Concern\AbstractHandler;
+use Swoft\Cache\Concern\AbstractAdapter;
 use Swoft\Cache\Exception\InvalidArgumentException;
 use function time;
 
 /**
- * Class ArrayHandler
+ * Class ArrayAdapter
  *
  * @since 2.0.7
  */
-class ArrayHandler extends AbstractHandler
+class ArrayAdapter extends AbstractAdapter
 {
     /**
      * @var array
      */
     private $data = [];
-
-    /**
-     * {@inheritDoc}
-     */
-    public function gc(int $maxLifetime): bool
-    {
-        $curTime = time();
-
-        foreach ($this->data as $sid => $item) {
-            if (($item['t'] + $maxLifetime) < $curTime) {
-                unset($this->data[$sid]);
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Fetches a value from the cache.
@@ -50,13 +34,17 @@ class ArrayHandler extends AbstractHandler
     {
         $this->checkKey($key);
 
-        if (isset($this->data[$key])) {
-            $item = $this->data[$key];
-
-            return $item['t'] > time() ? $item['v'] : $default;
+        if (!isset($this->data[$key])) {
+            return $default;
         }
 
-        return $default;
+        $row = $this->data[$key];
+        if ($row['t'] < time()) {
+            unset($this->data[$key]);
+            return $default;
+        }
+
+        return $row['v'];
     }
 
     /**
