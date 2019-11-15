@@ -47,11 +47,11 @@ final class AutoLoader extends SwoftComponent
     public function beans(): array
     {
         return [
-            Cache::MANAGER => [
+            Cache::MANAGER     => [
                 'class'   => CacheManager::class,
-                'adapter' => bean(Cache::ADAPTER),
+                'adapter' => bean(FileAdapter::class),
             ],
-            Cache::ADAPTER => [
+            FileAdapter::class => [
                 'class'    => FileAdapter::class,
                 'savePath' => alias('@runtime/caches'),
             ],

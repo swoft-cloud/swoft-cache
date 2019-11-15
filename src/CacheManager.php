@@ -3,10 +3,7 @@
 namespace Swoft\Cache;
 
 use Psr\SimpleCache\CacheInterface;
-use Swoft\Cache\Adapter\ArrayAdapter;
-use Swoft\Cache\Adapter\CoFileAdapter;
-use Swoft\Cache\Adapter\FileAdapter;
-use Swoft\Cache\Adapter\MemTableAdapter;
+use Swoft\Cache\Contract\CacheAdapterInterface;
 
 /**
  * Class CacheManager
@@ -15,127 +12,61 @@ use Swoft\Cache\Adapter\MemTableAdapter;
  */
 class CacheManager implements CacheInterface
 {
-    public const ADAPTER_FILE   = 'file';
-    public const ADAPTER_COFILE = 'cofile';
-    public const ADAPTER_ARRAY  = 'array';
-    public const ADAPTER_MTABLE = 'mTable';
-
     /**
      * Current used cache adapter driver
      *
-     * @var string
+     * @var CacheAdapterInterface
      */
-    private $adapter = Cache::ADAPTER;
+    private $adapter;
 
     /**
      * @var array
      */
-    private $adapters = [
-        'file'   => FileAdapter::class,
-        'coFile' => CoFileAdapter::class,
-        'array'  => ArrayAdapter::class,
-        'mTable' => MemTableAdapter::class,
-    ];
+    // private $adapters = [
+    //     'file'   => FileAdapter::class,
+    //     'coFile' => CoFileAdapter::class,
+    //     'array'  => ArrayAdapter::class,
+    //     'mTable' => MemTableAdapter::class,
+    // ];
 
     /**
      * Init cache manager
      */
     public function init(): void
     {
-
+        // TODO ...
     }
 
     /**
      * {@inheritDoc}
      */
-    public function set(string $key, $value, $ttl = null): bool
+    public function has($key): bool
     {
-        return $this->getAdapter()->set($key, $value, $ttl);
+        return $this->adapter->has($key);
     }
 
     /**
-     * @param string $adapter
-     *
-     * @return CacheInterface
+     * {@inheritDoc}
      */
-    public function getAdapterClass(string $adapter = ''): string
+    public function set($key, $value, $ttl = null): bool
     {
-        return $this->adapters[$adapter] ?? $this->adapter;
+        return $this->adapter->set($key, $value, $ttl);
     }
 
     /**
-     * @param string $adapter
-     *
-     * @return CacheInterface
-     * @throws \InvalidArgumentException When driver does not exist
-     */
-    public function getAdapter(string $adapter = ''): CacheInterface
-    {
-        $currentDriver = $adapter ?? $this->adapter;
-        $adapters       = $this->getAdapters();
-
-        if (!isset($adapters[$currentDriver])) {
-            throw new \InvalidArgumentException(sprintf('Driver %s not exist', $currentDriver));
-        }
-
-        //TODO If driver component not loaded, throw an exception.
-
-        return \Swoft::getBean($adapters[$currentDriver]);
-    }
-
-    /**
-     * @return array
-     */
-    public function getAdapters(): array
-    {
-        return $this->adapters;
-    }
-
-    /**
-     * @param array $adapters
-     */
-    public function setAdapters(array $adapters): void
-    {
-        $this->adapters = array_merge($this->adapters, $adapters);
-    }
-
-    /**
-     * @param string $adapter
-     */
-    public function setAdapter(string $adapter): void
-    {
-        $this->adapter = $adapter;
-    }
-
-    /**
-     * Fetches a value from the cache.
-     *
-     * @param string $key     The unique key of this item in the cache.
-     * @param mixed  $default Default value to return if the key does not exist.
-     *
-     * @return mixed The value of the item from the cache, or $default in case of cache miss.
-     *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if the $key string is not a legal value.
+     * {@inheritDoc}
      */
     public function get($key, $default = null)
     {
-        // TODO: Implement get() method.
+        return $this->adapter->get($key, $default);
     }
 
     /**
-     * Delete an item from the cache by its unique key.
-     *
-     * @param string $key The unique cache key of the item to delete.
-     *
-     * @return bool True if the item was successfully removed. False if there was an error.
-     *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if the $key string is not a legal value.
+     * {@inheritDoc}
      */
     public function delete($key)
     {
-        // TODO: Implement delete() method.
+        return $this->adapter->get($key);
     }
 
     /**
@@ -143,9 +74,9 @@ class CacheManager implements CacheInterface
      *
      * @return bool True on success and false on failure.
      */
-    public function clear()
+    public function clear(): bool
     {
-        // TODO: Implement clear() method.
+        return $this->adapter->clear();
     }
 
     /**
@@ -153,41 +84,23 @@ class CacheManager implements CacheInterface
      */
     public function getMultiple($keys, $default = null): array
     {
-        // TODO: Implement getMultiple() method.
-    }
-
-    /**
-     * Persists a set of key => value pairs in the cache, with an optional TTL.
-     *
-     * @param iterable               $values A list of key => value pairs for a multiple-set operation.
-     * @param null|int|\DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
-     *                                       the driver supports TTL then the library may set a default value
-     *                                       for it or let the driver take care of that.
-     *
-     * @return bool True on success and false on failure.
-     *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if $values is neither an array nor a Traversable,
-     *   or if any of the $values are not a legal value.
-     */
-    public function setMultiple($values, $ttl = null)
-    {
-        // TODO: Implement setMultiple() method.
+        /** @noinspection PhpIncompatibleReturnTypeInspection */
+        return $this->adapter->getMultiple($keys, $default);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function deleteMultiple($keys)
+    public function setMultiple($values, $ttl = null): bool
     {
-        // TODO: Implement deleteMultiple() method.
+        return $this->adapter->setMultiple((array)$values, $ttl);
     }
 
     /**
      * {@inheritDoc}
      */
-    public function has($key)
+    public function deleteMultiple($keys): bool
     {
-        // TODO: Implement has() method.
+        return $this->adapter->deleteMultiple((array)$keys);
     }
 }
