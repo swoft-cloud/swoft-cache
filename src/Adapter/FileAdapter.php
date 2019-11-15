@@ -48,7 +48,7 @@ class FileAdapter extends AbstractAdapter
      */
     public function read(string $id): string
     {
-        $file = $this->getSessionFile($id);
+        $file = $this->getCacheFile($id);
         if (!file_exists($file)) {
             return '';
         }
@@ -70,7 +70,7 @@ class FileAdapter extends AbstractAdapter
      */
     public function write(string $id, string $data): bool
     {
-        return file_put_contents($this->getSessionFile($id), $data) !== false;
+        return file_put_contents($this->getCacheFile($id), $data) !== false;
     }
 
     /**
@@ -80,7 +80,7 @@ class FileAdapter extends AbstractAdapter
      */
     public function destroy(string $id): bool
     {
-        $file = $this->getSessionFile($id);
+        $file = $this->getCacheFile($id);
         if (file_exists($file)) {
             return unlink($file);
         }
@@ -122,7 +122,7 @@ class FileAdapter extends AbstractAdapter
      *
      * @return string
      */
-    protected function getSessionFile(string $id): string
+    protected function getCacheFile(string $id): string
     {
         return $this->savePath . '/' . $this->prefix . $id;
     }

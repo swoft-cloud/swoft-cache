@@ -29,7 +29,7 @@ class CoFileAdapter extends FileAdapter
      */
     public function read(string $id): string
     {
-        $file = $this->getSessionFile($id);
+        $file = $this->getCacheFile($id);
         if (!file_exists($file)) {
             return '';
         }
@@ -51,7 +51,7 @@ class CoFileAdapter extends FileAdapter
      */
     public function write(string $id, string $data): bool
     {
-        return Co::writeFile($this->getSessionFile($id), $data) !== false;
+        return Co::writeFile($this->getCacheFile($id), $data) !== false;
     }
 
     /**

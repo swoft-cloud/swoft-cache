@@ -2,122 +2,60 @@
 
 namespace Swoft\Cache;
 
-use Psr\SimpleCache\CacheInterface;
+use Psr\SimpleCache\InvalidArgumentException;
+use Swoft;
 
 /**
- * @method string|bool get($key, $default = null)
- * @method bool delete($key)
- * @method bool clear()
- * @method array getMultiple($keys, $default = null)
- * @method bool setMultiple($values, $ttl = null)
- * @method bool deleteMultiple($keys)
- * @method int has($key)
+ * Class Cache
+ *
+ * @since 2.0.07
  */
-class Cache
+final class Cache
 {
-    /**
-     * @var string
-     */
-    private $driver = 'redis';
+    public const MANAGER = 'cacheManager';
+    public const ADAPTER = 'cacheAdapter';
 
     /**
-     * @var array
+     * @return CacheManager
      */
-    private $drivers = [];
-
-    /**
-     * TODO add serializer mechanism
-     *
-     * @var null|string
-     */
-    private $serializer = null;
-
-    /**
-     * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
-     *
-     * @param string                 $key   The key of the item to store.
-     * @param int|double|string|bool $value The value of the item to store, must be serializable.
-     * @param null|int|\DateInterval $ttl   Optional. The TTL value of this item. If no value is sent and the driver
-     *                                      supports TTL then the library may set a default value for it or let the
-     *                                      driver take care of that.
-     *
-     * @return bool True on success and false on failure.
-     * @throws \InvalidArgumentException If the $value string is not a legal value
-     */
-    public function set(string $key, $value, $ttl = null): bool
+    public static function manager(): CacheManager
     {
-        $valueType = \gettype($value);
-        if (!\in_array($valueType, ['integer', 'double', 'boolean', 'string'], true)) {
-            // TODO add serializer mechanism handle the other type
-            throw new \InvalidArgumentException('Invalid value type');
-        }
-
-        return $this->getDriver()->set($key, $value, $ttl);
+        return Swoft::getBean(self::MANAGER);
     }
 
     /**
-     * @param string $method
-     * @param array  $arguments
+     * @param string $key
+     * @param null   $default
      *
      * @return mixed
-     * @throws \RuntimeException If the $method does not exist
-     * @throws \InvalidArgumentException If the driver dose not exist
+     * @throws InvalidArgumentException
      */
-    public function __call($method, $arguments)
+    public static function get(string $key, $default = null)
     {
-        $availableMethods = [
-            'has',
-            'get',
-            'set',
-            'delete',
-            'getMultiple',
-            'setMultiple',
-            'deleteMultiple',
-            'clear',
-        ];
-        if (!\in_array($method, $availableMethods, true)) {
-            throw new \RuntimeException(sprintf('Method not exist, method=%s', $method));
-        }
-        $driver = $this->getDriver();
-        return $driver->$method(...$arguments);
+        return self::manager()->get($key, $default);
     }
 
     /**
-     * @param string|null $driver
+     * @param string $key
+     * @param        $value
+     * @param int    $ttl
      *
-     * @return CacheInterface
-     * @throws \InvalidArgumentException When driver does not exist
+     * @return bool
+     * @throws InvalidArgumentException
      */
-    public function getDriver(string $driver = null): CacheInterface
+    public static function set(string $key, $value, int $ttl = 0): bool
     {
-        $currentDriver = $driver ?? $this->driver;
-        $drivers       = $this->getDrivers();
-        if (!isset($drivers[$currentDriver])) {
-            throw new \InvalidArgumentException(sprintf('Driver %s not exist', $currentDriver));
-        }
-
-        //TODO If driver component not loaded, throw an exception.
-
-        return \Swoft::getBean($drivers[$currentDriver]);
+        return self::manager()->set($key, $value, $ttl);
     }
 
     /**
-     * @return array
-     */
-    private function getDrivers(): array
-    {
-        return array_merge($this->drivers, $this->defaultDrivers());
-    }
-
-    /**
-     * Default drivers
+     * @param string $key
      *
-     * @return array
+     * @return bool
+     * @throws InvalidArgumentException
      */
-    private function defaultDrivers(): array
+    public static function delete(string $key): bool
     {
-        return [
-            'redis' => \Swoft\Redis\Redis::class,
-        ];
+        return self::manager()->delete($key);
     }
 }
