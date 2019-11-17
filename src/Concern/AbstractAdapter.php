@@ -24,6 +24,11 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     protected $prefix = 'cache_';
 
     /**
+     * @var array
+     */
+    protected $options = [];
+
+    /**
      * @var bool
      */
     private $encrypt = false;
@@ -68,6 +73,24 @@ abstract class AbstractAdapter implements CacheAdapterInterface
         if (!is_array($keys)) {
             throw new InvalidArgumentException('The cache keys must be an string array');
         }
+    }
+
+    protected function serialize($data): string
+    {
+        if ($this->serializer) {
+            return $this->serializer->serialize($data);
+        }
+
+        return (string)$data;
+    }
+
+    protected function unserialize(string $string)
+    {
+        if ($this->serializer) {
+            return $this->serializer->unserialize($string);
+        }
+
+        return $string;
     }
 
     /**

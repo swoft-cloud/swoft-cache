@@ -4,6 +4,7 @@ namespace Swoft\Cache;
 
 use Swoft\Cache\Adapter\FileAdapter;
 use Swoft\Helper\ComposerJSON;
+use Swoft\Serialize\PhpSerializer;
 use Swoft\SwoftComponent;
 use function alias;
 use function bean;
@@ -52,9 +53,13 @@ final class AutoLoader extends SwoftComponent
                 'adapter' => bean(FileAdapter::class),
             ],
             FileAdapter::class => [
-                'class'    => FileAdapter::class,
-                'savePath' => alias('@runtime/caches'),
+                'class'      => FileAdapter::class,
+                'serializer' => bean('cacheSerializer'),
+                'savePath'   => alias('@runtime/caches'),
             ],
+            'cacheSerializer' => [
+                'class' => PhpSerializer::class
+            ]
         ];
     }
 }

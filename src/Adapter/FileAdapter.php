@@ -28,6 +28,12 @@ class FileAdapter extends AbstractAdapter
      */
     public function init(): void
     {
+        if (empty($this->options['savePath'])) {
+            $this->options['savePath'] = '/tmp/swoft-caches';
+        }
+
+        $savePath = $this->options['savePath'];
+
         if (!is_dir($this->savePath)) {
             Dir::make($this->savePath);
         }
@@ -118,13 +124,13 @@ class FileAdapter extends AbstractAdapter
     }
 
     /**
-     * @param string $id
+     * @param string $key
      *
      * @return string
      */
-    protected function getCacheFile(string $id): string
+    protected function getCacheFile(string $key): string
     {
-        return $this->savePath . '/' . $this->prefix . $id;
+        return $this->savePath . '/' . $this->prefix . $key;
     }
 
     /**
@@ -150,7 +156,7 @@ class FileAdapter extends AbstractAdapter
      */
     public function has($key): bool
     {
-        // TODO: Implement has() method.
+        return file_exists($this->getCacheFile($key));
     }
 
     /**
@@ -217,6 +223,7 @@ class FileAdapter extends AbstractAdapter
     {
         $this->checkKey($key);
 
+        $text = file_get_contents($this->getCacheFile($key));
 
     }
 
