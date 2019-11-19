@@ -63,7 +63,10 @@ class RedisAdapter extends AbstractAdapter
     {
         $cacheKey = $this->getCacheKey($key);
 
-        return (bool)$this->redis->set($cacheKey, $value, (int)$ttl);
+        $ttl   = $this->formatTTL($ttl);
+        $value = $this->getSerializer()->serialize($value);
+
+        return (bool)$this->redis->set($cacheKey, $value, $ttl);
     }
 
     /**
@@ -84,7 +87,9 @@ class RedisAdapter extends AbstractAdapter
      */
     public function setMultiple($values, $ttl = null): bool
     {
-        return $this->redis->mset($values, (int)$ttl);
+        $ttl = $this->formatTTL($ttl);
+
+        return $this->redis->mset($values, $ttl);
     }
 
     /**
@@ -94,7 +99,7 @@ class RedisAdapter extends AbstractAdapter
      */
     public function deleteMultiple($keys): bool
     {
-        $this->checkKeys($keys);
+        $keys = $this->checkKeys($keys);
 
         return $this->redis->del(...$keys) === count($keys);
     }
@@ -107,8 +112,11 @@ class RedisAdapter extends AbstractAdapter
         $this->checkKey($key);
 
         $value = $this->redis->get($key);
+        if ($value === false) {
+            return $default;
+        }
 
-        return $value === false ? $default : $value;
+        return $this->getSerializer()->unserialize((string)$value);
     }
 
     /**
@@ -126,6 +134,13 @@ class RedisAdapter extends AbstractAdapter
      */
     public function getMultiple($keys, $default = null)
     {
-        return $this->redis->mget((array)$keys);
+        $rows = [];
+        $list = $this->redis->mget((array)$keys);
+
+        foreach ($list as $item) {
+            $rows[] = $this->getSerializer()->unserialize($item);
+        }
+
+        return $rows;
     }
 }

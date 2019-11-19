@@ -2,7 +2,6 @@
 
 namespace Swoft\Cache\Adapter;
 
-use Psr\SimpleCache\InvalidArgumentException;
 use Swoft\Cache\Concern\AbstractAdapter;
 use Swoft\Swlib\MemTable;
 use Swoole\Table;
@@ -16,9 +15,6 @@ use function time;
  */
 class MemTableAdapter extends AbstractAdapter
 {
-    public const TIME_FIELD = 't';
-    public const DATA_FIELD = 'd';
-
     /**
      * @var MemTable
      */
@@ -28,8 +24,8 @@ class MemTableAdapter extends AbstractAdapter
      * @var array
      */
     private $columns = [
-        self::TIME_FIELD => [Table::TYPE_INT, 10],
-        self::DATA_FIELD => [Table::TYPE_STRING, 10240],
+        self::TIME_KEY => [Table::TYPE_INT, 10],
+        self::DATA_KEY => [Table::TYPE_STRING, 10240],
     ];
 
     /**
@@ -116,13 +112,12 @@ class MemTableAdapter extends AbstractAdapter
      */
     public function set($key, $value, $ttl = null): bool
     {
-        if ($this->serializer) {
-            $value = $this->serializer->serialize($value);
-        }
+        $this->checkKey($key);
+        $ttl = $this->formatTTL($ttl);
 
         return $this->table->set($key, [
-            self::TIME_FIELD => $ttl > 0 ? time() + $ttl : 0,
-            self::DATA_FIELD => $value,
+            self::TIME_KEY => $ttl > 0 ? time() + $ttl : 0,
+            self::DATA_KEY => $value,
         ]);
     }
 
@@ -144,6 +139,8 @@ class MemTableAdapter extends AbstractAdapter
      */
     public function setMultiple($values, $ttl = null): bool
     {
+        $ttl = $this->formatTTL($ttl);
+
         foreach ($values as $key => $value) {
             $this->set($key, $value, $ttl);
         }
@@ -158,6 +155,8 @@ class MemTableAdapter extends AbstractAdapter
      */
     public function deleteMultiple($keys): bool
     {
+        $keys = $this->checkKeys($keys);
+
         foreach ($keys as $key) {
             $this->table->del($key);
         }
@@ -179,32 +178,21 @@ class MemTableAdapter extends AbstractAdapter
         }
 
         // Data expired
-        if ($row[self::TIME_FIELD] < time()) {
+        if ($row[self::TIME_KEY] < time()) {
             $this->table->del($key);
             return $default;
         }
 
-        $value = $row[self::DATA_FIELD];
-
-        if ($this->serializer) {
-            $value = $this->serializer->unserialize($value);
-        }
-
-        return $value;
+        return $row[self::DATA_KEY];
     }
 
     /**
-     * Obtains multiple cache items by their unique keys.
-     *
-     * @param iterable $keys    A list of keys that can obtained in a single operation.
-     * @param mixed    $default Default value to return for keys that do not exist.
-     *
-     * @return iterable|array A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
-     * @throws InvalidArgumentException
+     * {@inheritDoc}
      */
     public function getMultiple($keys, $default = null)
     {
         $rows = [];
+        $keys = $this->checkKeys($keys);
 
         foreach ($keys as $key) {
             $rows[$key] = $this->get($key, $default);

@@ -2,12 +2,22 @@
 
 namespace Swoft\Cache\Concern;
 
+use DateInterval;
+use DateTime;
 use Swoft\Cache\Contract\CacheAdapterInterface;
 use Swoft\Cache\Exception\InvalidArgumentException;
 use Swoft\Contract\EncrypterInterface;
 use Swoft\Serialize\Contract\SerializerInterface;
+use Swoft\Serialize\PhpSerializer;
+use Traversable;
+use function get_class;
+use function gettype;
 use function is_array;
+use function is_int;
+use function is_object;
 use function is_string;
+use function iterator_to_array;
+use function sprintf;
 
 /**
  * Class AbstractAdapter
@@ -16,17 +26,15 @@ use function is_string;
  */
 abstract class AbstractAdapter implements CacheAdapterInterface
 {
+    public const TIME_KEY = 't';
+    public const DATA_KEY = 'd';
+
     /**
      * The prefix for session key
      *
      * @var string
      */
     protected $prefix = 'cache_';
-
-    /**
-     * @var array
-     */
-    protected $options = [];
 
     /**
      * @var bool
@@ -43,9 +51,9 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     /**
      * Data serializer
      *
-     * @var null|SerializerInterface
+     * @var SerializerInterface
      */
-    protected $serializer;
+    private $serializer;
 
     /**
      * @return bool
@@ -66,31 +74,38 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     }
 
     /**
-     * @param $keys
+     * @param array|Traversable|mixed $keys
+     *
+     * @return array
      */
-    protected function checkKeys($keys): void
+    protected function checkKeys($keys): array
     {
-        if (!is_array($keys)) {
+        if ($keys instanceof Traversable) {
+            $keys = iterator_to_array($keys, false);
+        } elseif (!is_array($keys)) {
             throw new InvalidArgumentException('The cache keys must be an string array');
         }
+
+        return $keys;
     }
 
-    protected function serialize($data): string
+    /**
+     * @param int|DateInterval|mixed $ttl
+     *
+     * @return int
+     */
+    protected function formatTTL($ttl): int
     {
-        if ($this->serializer) {
-            return $this->serializer->serialize($data);
+        if (is_int($ttl)) {
+            return 0 < $ttl ? 0: $ttl;
         }
 
-        return (string)$data;
-    }
-
-    protected function unserialize(string $string)
-    {
-        if ($this->serializer) {
-            return $this->serializer->unserialize($string);
+        if ($ttl instanceof DateInterval) {
+            $ttl = (int)DateTime::createFromFormat('U', 0)->add($ttl)->format('U');
         }
 
-        return $string;
+        $msgTpl = 'Expiration date must be an integer, a DateInterval or null, "%s" given';
+        throw new InvalidArgumentException(sprintf($msgTpl, is_object($ttl) ? get_class($ttl) : gettype($ttl)));
     }
 
     /**
@@ -136,10 +151,14 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     }
 
     /**
-     * @return SerializerInterface|null
+     * @return SerializerInterface
      */
-    public function getSerializer(): ?SerializerInterface
+    public function getSerializer(): SerializerInterface
     {
+        if (!$this->serializer) {
+            $this->serializer = new PhpSerializer();
+        }
+
         return $this->serializer;
     }
 

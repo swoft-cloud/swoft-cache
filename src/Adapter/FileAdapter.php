@@ -4,6 +4,7 @@ namespace Swoft\Cache\Adapter;
 
 use Swoft\Cache\Concern\AbstractAdapter;
 use Swoft\Stdlib\Helper\Dir;
+use Swoft\Stdlib\Helper\Sys;
 use function file_exists;
 use function file_get_contents;
 use function file_put_contents;
@@ -21,18 +22,16 @@ class FileAdapter extends AbstractAdapter
     /**
      * @var string
      */
-    private $savePath = '/tmp/swoft-caches';
+    private $savePath = '';
 
     /**
      * Init $savePath directory
      */
     public function init(): void
     {
-        if (empty($this->options['savePath'])) {
-            $this->options['savePath'] = '/tmp/swoft-caches';
+        if (!$this->savePath) {
+            $this->savePath = Sys::getTempDir() . '/swoft-caches';
         }
-
-        $savePath = $this->options['savePath'];
 
         if (!is_dir($this->savePath)) {
             Dir::make($this->savePath);
@@ -40,28 +39,128 @@ class FileAdapter extends AbstractAdapter
     }
 
     /**
-     * {@inheritDoc}
+     * @param string $key
+     *
+     * @return bool
      */
-    public function open(string $savePath, string $sessionName): bool
+    public function has($key): bool
     {
+        return file_exists($this->getCacheFile($key));
+    }
+
+    /**
+     * @param string       $key
+     * @param mixed        $value
+     * @param null|integer $ttl
+     *
+     * @return bool
+     */
+    public function set($key, $value, $ttl = null): bool
+    {
+        $file = $this->getCacheFile($key);
+        $ttl = $this->formatTTL($ttl);
+
+        $string = $this->getSerializer()->serialize([
+            self::TIME_KEY => $ttl > 0 ? time() + $ttl : 0,
+            self::DATA_KEY => $value,
+        ]);
+
+        return $this->doWrite($file, $string);
+    }
+
+    /**
+     * @param array        $values
+     * @param null|integer $ttl
+     *
+     * @return bool
+     */
+    public function setMultiple($values, $ttl = null): bool
+    {
+        $ttl = $this->formatTTL($ttl);
+
+        foreach ($values as $key => $value) {
+            $this->set($key, $value, $ttl);
+        }
+
         return true;
     }
 
     /**
-     * @param string $id
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function delete($key): bool
+    {
+        $file = $this->getCacheFile($key);
+
+        if (file_exists($file)) {
+            return unlink($file);
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array $keys
+     *
+     * @return bool
+     */
+    public function deleteMultiple($keys): bool
+    {
+        $keys = $this->checkKeys($keys);
+
+        foreach ($keys as $key) {
+            $this->delete($key);
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function get($key, $default = null)
+    {
+        $this->checkKey($key);
+
+        $file = $this->getCacheFile($key);
+        if (!$string = $this->doRead($file)) {
+            return $default;
+        }
+
+        $item = $this->getSerializer()->unserialize($string);
+        if ($item[self::TIME_KEY] < time()) {
+            $this->doDelete($file);
+            return $default;
+        }
+
+        return $item[self::DATA_KEY];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getMultiple($keys, $default = null)
+    {
+        $keys = $this->checkKeys($keys);
+
+        $values = [];
+        foreach ($keys as $key) {
+            $values[$key] = $this->get($key, $default);
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param string $file
      *
      * @return string
      */
-    public function read(string $id): string
+    protected function doRead(string $file): string
     {
-        $file = $this->getCacheFile($id);
         if (!file_exists($file)) {
-            return '';
-        }
-
-        // If data has been expired
-        if (filemtime($file) + $this->expireTime < time()) {
-            unlink($file);
             return '';
         }
 
@@ -69,29 +168,38 @@ class FileAdapter extends AbstractAdapter
     }
 
     /**
-     * @param string $id
+     * @param string $file
      * @param string $data
      *
      * @return bool
      */
-    public function write(string $id, string $data): bool
+    protected function doWrite(string $file, string $data): bool
     {
-        return file_put_contents($this->getCacheFile($id), $data) !== false;
+        return file_put_contents($file, $data) !== false;
     }
 
     /**
-     * @param string $id
+     * @param string $file
      *
      * @return bool
      */
-    public function destroy(string $id): bool
+    protected function doDelete(string $file): bool
     {
-        $file = $this->getCacheFile($id);
-        if (file_exists($file)) {
-            return unlink($file);
+        return unlink($file);
+    }
+
+    /**
+     * @return bool
+     */
+    public function clear(): bool
+    {
+        foreach (glob("{$this->savePath}/{$this->prefix}*") as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
         }
 
-        return false;
+        return true;
     }
 
     /**
@@ -109,17 +217,6 @@ class FileAdapter extends AbstractAdapter
             }
         }
 
-        return true;
-    }
-
-    /**
-     * Close the session, will clear all session data.
-     *
-     * @return bool
-     */
-    public function close(): bool
-    {
-        // return $this->gc(-1);
         return true;
     }
 
@@ -147,100 +244,5 @@ class FileAdapter extends AbstractAdapter
     public function setSavePath(string $savePath): void
     {
         $this->savePath = $savePath;
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    public function has($key): bool
-    {
-        return file_exists($this->getCacheFile($key));
-    }
-
-    /**
-     * @param string       $key
-     * @param mixed        $value
-     * @param null|integer $ttl
-     *
-     * @return bool
-     */
-    public function set($key, $value, $ttl = null): bool
-    {
-        // TODO: Implement set() method.
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return bool
-     */
-    public function delete($key): bool
-    {
-        // TODO: Implement delete() method.
-    }
-
-    /**
-     * @param array        $values
-     * @param null|integer $ttl
-     *
-     * @return bool
-     */
-    public function setMultiple($values, $ttl = null): bool
-    {
-        // TODO: Implement setMultiple() method.
-    }
-
-    /**
-     * @param array $keys
-     *
-     * @return bool
-     */
-    public function deleteMultiple($keys): bool
-    {
-        // TODO: Implement deleteMultiple() method.
-    }
-
-    /**
-     * @return bool
-     */
-    public function clear(): bool
-    {
-        foreach (glob("{$this->savePath}/{$this->prefix}*") as $file) {
-            if (file_exists($file)) {
-                unlink($file);
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function get($key, $default = null)
-    {
-        $this->checkKey($key);
-
-        $text = file_get_contents($this->getCacheFile($key));
-
-    }
-
-    /**
-     * Obtains multiple cache items by their unique keys.
-     *
-     * @param iterable $keys    A list of keys that can obtained in a single operation.
-     * @param mixed    $default Default value to return for keys that do not exist.
-     *
-     * @return iterable A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
-     *
-     * @throws \Psr\SimpleCache\InvalidArgumentException
-     *   MUST be thrown if $keys is neither an array nor a Traversable,
-     *   or if any of the $keys are not a legal value.
-     */
-    public function getMultiple($keys, $default = null)
-    {
-        // TODO: Implement getMultiple() method.
     }
 }
