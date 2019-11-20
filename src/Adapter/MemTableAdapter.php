@@ -21,6 +21,16 @@ class MemTableAdapter extends AbstractAdapter
     private $table;
 
     /**
+     * @var int
+     */
+    private $size = 10240;
+
+    /**
+     * @var string
+     */
+    private $name = 'mem-cache-table';
+
+    /**
      * @var array
      */
     private $columns = [
@@ -42,12 +52,17 @@ class MemTableAdapter extends AbstractAdapter
     }
 
     /**
-     * Init instance
+     * Init instance.
+     * Will called on swoft bean created.
      */
     public function init(): void
     {
-        $this->table = new MemTable('mem-table-cache', 10240, $this->columns);
+        if (!$this->table) {
+            $this->table = new MemTable($this->name, $this->size, $this->columns);
+        }
 
+        // Create swoole table.
+        // You should create it before swoole server start.
         $ok = $this->table->create();
         if ($ok && $this->dataFile) {
             $this->table->setDbFile($this->dataFile);
@@ -199,5 +214,21 @@ class MemTableAdapter extends AbstractAdapter
         }
 
         return $rows;
+    }
+
+    /**
+     * @param string $name
+     */
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @param int $size
+     */
+    public function setSize(int $size): void
+    {
+        $this->size = $size;
     }
 }

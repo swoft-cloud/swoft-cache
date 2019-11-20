@@ -3,47 +3,56 @@
 namespace SwoftTest\Cache;
 
 use PHPUnit\Framework\TestCase;
-use Swoft\Cache\Cache;
+use Swoft\Cache\Adapter\ArrayAdapter;
+use Swoft\Cache\CacheManager;
+use Swoft\Cache\Exception\InvalidArgumentException;
+use SwoftTest\Testing\Concern\CommonTestAssertTrait;
 
+/**
+ * Class CacheTest
+ */
 class CacheTest extends TestCase
 {
-    /**
-     * @test
-     * @requires extension redis
-     */
-    public function cache(): void
-    {
-        $cache       = new Cache();
-        $key         = 'test:key';
-        $stringValue = 'value';
-        $intValue    = 1;
-        $floatValue  = 1.234;
-        $boolValue   = false;
-        $arrayValue  = ['int' => 1, 'float' => 1.234, 'bool' => true, 'string' => 'value'];
+    use CommonTestAssertTrait;
 
-        /**
-         * Set & Get
-         */
-        // string
-        $setResult = $cache->set($key, $stringValue);
-        $this->assertTrue($setResult);
-        $getResult = $cache->get($key);
-        $this->assertEquals($stringValue, $getResult);
-        // int
-        $setResult = $cache->set($key, $intValue);
-        $this->assertTrue($setResult);
-        $getResult = $cache->get($key);
-        $this->assertEquals($intValue, $getResult);
-        // float
-        $setResult = $cache->set($key, $floatValue);
-        $this->assertTrue($setResult);
-        $getResult = $cache->get($key);
-        $this->assertEquals($floatValue, $getResult);
-        // bool
-        $setResult = $cache->set($key, $boolValue);
-        $this->assertTrue($setResult);
-        $getResult = $cache->get($key);
-        $this->assertEquals($boolValue, $getResult);
+    /**
+     * @throws InvalidArgumentException
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     */
+    public function testCache(): void
+    {
+        $cache = new CacheManager();
+        $cache->setAdapter(new ArrayAdapter());
+
+        $key   = 'test:key';
+        $tests = [
+            'string',
+            1,
+            1.235,
+            false,
+            ['int' => 1, 'float' => 1.234, 'bool' => true, 'string' => 'value'],
+        ];
+
+        foreach ($tests as $value) {
+            $ok = $cache->set($key, $value);
+
+            $this->assertTrue($ok);
+            $this->assertTrue($cache->has($key));
+
+            $this->assertEquals($value, $cache->get($key));
+
+            $this->assertTrue($condition);
+        }
+
+        foreach ([12, true, null, ''] as $key) {
+            $this->assetException(function () use ($cache, $key) {
+                $cache->set($key, 'value');
+            }, InvalidArgumentException::class);
+
+            $this->assetException(function () use ($cache, $key) {
+                $cache->get($key);
+            }, InvalidArgumentException::class);
+        }
 
         /**
          * Delete

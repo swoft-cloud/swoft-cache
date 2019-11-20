@@ -103,4 +103,20 @@ class CacheManager implements CacheInterface
     {
         return $this->adapter->deleteMultiple((array)$keys);
     }
+
+    /**
+     * @return CacheAdapterInterface
+     */
+    public function getAdapter(): CacheAdapterInterface
+    {
+        return $this->adapter;
+    }
+
+    /**
+     * @param CacheAdapterInterface $adapter
+     */
+    public function setAdapter(CacheAdapterInterface $adapter): void
+    {
+        $this->adapter = $adapter;
+    }
 }
