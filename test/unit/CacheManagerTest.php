@@ -11,7 +11,7 @@ use SwoftTest\Testing\Concern\CommonTestAssertTrait;
 /**
  * Class CacheTest
  */
-class CacheTest extends TestCase
+class CacheManagerTest extends TestCase
 {
     use CommonTestAssertTrait;
 
@@ -30,7 +30,13 @@ class CacheTest extends TestCase
             1,
             1.235,
             false,
-            ['int' => 1, 'float' => 1.234, 'bool' => true, 'string' => 'value'],
+            [
+                'int' => 1,
+                'float' => 1.234,
+                'bool' => true,
+                'null' => null,
+                'string' => 'value'
+            ],
         ];
 
         foreach ($tests as $value) {
@@ -41,8 +47,13 @@ class CacheTest extends TestCase
 
             $this->assertEquals($value, $cache->get($key));
 
-            $this->assertTrue($condition);
+            $this->assertTrue($cache->delete($key));
+            $this->assertFalse($cache->has($key));
         }
+
+        $this->assertFalse($cache->has('not-exist'));
+        $this->assertNull($cache->get('not-exist'));
+        $this->assertSame('default', $cache->get('not-exist', 'default'));
 
         foreach ([12, true, null, ''] as $key) {
             $this->assetException(function () use ($cache, $key) {
@@ -55,33 +66,11 @@ class CacheTest extends TestCase
         }
 
         /**
-         * Delete
-         */
-        $deleteResult = $cache->delete($key);
-        $this->assertTrue($deleteResult);
-        $getResultAfterDelete = $cache->get($key);
-        $this->assertNull($getResultAfterDelete);
-
-        /**
          * clear
          */
-        $cache->set($key, $stringValue);
-        $clearResult = $cache->clear();
-        $this->assertTrue($clearResult);
-        $getResultAfterClear = $cache->get($key);
-        $this->assertNull($getResultAfterClear);
-
-        /**
-         * Has
-         */
-        $cache->set($key, $stringValue);
-        // when exist
-        $hasResult = $cache->has($key);
-        $this->assertTrue($hasResult);
-        // When not exist
-        $cache->delete($key);
-        $hasResult = $cache->has($key);
-        $this->assertFalse($hasResult);
+        $cache->set($key, 'value');
+        $this->assertTrue($cache->clear());
+        $this->assertNull($cache->get($key));
 
         /**
          * setMultiple & getMultiple
