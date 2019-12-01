@@ -30,7 +30,7 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     public const DATA_KEY = 'd';
 
     /**
-     * The prefix for session key
+     * The prefix for cache key
      *
      * @var string
      */
@@ -97,7 +97,7 @@ abstract class AbstractAdapter implements CacheAdapterInterface
     protected function formatTTL($ttl): int
     {
         if (is_int($ttl)) {
-            return 0 < $ttl ? 0: $ttl;
+            return $ttl < 1 ? 0: $ttl;
         }
 
         if ($ttl instanceof DateInterval) {

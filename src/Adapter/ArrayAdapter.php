@@ -30,7 +30,10 @@ class ArrayAdapter extends AbstractAdapter
         }
 
         $row = $this->data[$key];
-        if ($row[self::TIME_KEY] < time()) {
+
+        // Check expire time
+        $expireTime = $row[self::TIME_KEY];
+        if ($expireTime > 0 && $expireTime < time()) {
             unset($this->data[$key]);
             return $default;
         }

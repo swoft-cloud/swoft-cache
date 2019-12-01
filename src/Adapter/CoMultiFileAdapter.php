@@ -4,13 +4,14 @@ namespace Swoft\Cache\Adapter;
 
 use Swoft\Co;
 use function extension_loaded;
+use function file_exists;
 
 /**
- * Class CoFileAdapter
+ * Class CoMultiFileAdapter
  *
  * @since 2.0.7
  */
-class CoFileAdapter extends FileAdapter
+class CoMultiFileAdapter extends MultiFileAdapter
 {
     /**
      * @return bool
@@ -25,8 +26,12 @@ class CoFileAdapter extends FileAdapter
      *
      * @return string
      */
-    public function read(string $file): string
+    public function doRead(string $file): string
     {
+        if (!file_exists($file)) {
+            return '';
+        }
+
         return Co::readFile($file);
     }
 

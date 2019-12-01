@@ -13,7 +13,9 @@ use Swoft;
 final class Cache
 {
     // Cache manager bean name
-    public const MANAGER = 'cacheManager';
+    public const MANAGER    = 'cacheManager';
+    public const ADAPTER    = 'cacheAdapter';
+    public const SERIALIZER = 'cacheSerializer';
 
     /**
      * @return CacheManager

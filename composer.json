@@ -5,6 +5,8 @@
     "php",
     "swoole",
     "swoft",
+    "psr-16",
+    "simple-cache",
     "cache"
   ],
   "description": "Cache Component for Swoft",
