@@ -5,11 +5,11 @@ namespace Swoft\Cache\Adapter;
 use Swoft\Cache\Concern\CoFileSystemTrait;
 
 /**
- * Class CoMultiFileAdapter
+ * Class CoFileAdapter
  *
- * @since 2.0.7
+ * @since 2.0.8
  */
-class CoMultiFileAdapter extends MultiFileAdapter
+class CoFileAdapter extends FileAdapter
 {
     use CoFileSystemTrait;
 }

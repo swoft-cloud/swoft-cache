@@ -56,6 +56,7 @@ final class AutoLoader extends SwoftComponent
                 'class'      => MultiFileAdapter::class,
                 'serializer' => bean(Cache::SERIALIZER),
                 'savePath'   => alias('@runtime/caches'),
+                // 'dataFile'   => alias('@runtime/caches/cache.data'),
             ],
             Cache::SERIALIZER => [
                 'class' => PhpSerializer::class

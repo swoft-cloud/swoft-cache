@@ -2,28 +2,54 @@
 
 namespace Swoft\Cache\Adapter;
 
-use Swoft\Cache\Concern\AbstractAdapter;
+use RuntimeException;
+use Swoft\Cache\Concern\FileSystemTrait;
 
 /**
  * Class FileAdapter
  *
  * @since 2.0.8
  */
-class FileAdapter extends AbstractAdapter
+class FileAdapter extends ArrayAdapter
 {
+    use FileSystemTrait;
+
     /**
      * @var string
      */
-    protected $dataFile;
+    protected $dataFile = '';
+
+    public function init(): void
+    {
+        if (!$this->dataFile) {
+            throw new RuntimeException('must set an datafile for storage cache data');
+        }
+
+        $this->loadData();
+    }
+
+    public function loadData(): void
+    {
+        $file = $this->dataFile;
+
+        if ($string = $this->doRead($file)) {
+            $this->setData($this->getSerializer()->unserialize($string));
+        }
+    }
 
     /**
-     * @param string $key
-     *
      * @return bool
      */
-    public function has($key): bool
+    public function saveData(): bool
     {
-        // TODO: Implement has() method.
+        $file   = $this->dataFile;
+        $string = '';
+
+        if ($data = $this->getData()) {
+            $string = $this->getSerializer()->serialize($data);
+        }
+
+        return $this->doWrite($file, $string);
     }
 
     /**
@@ -35,17 +61,25 @@ class FileAdapter extends AbstractAdapter
      */
     public function set($key, $value, $ttl = null): bool
     {
-        // TODO: Implement set() method.
+        if (parent::set($key, $value, $ttl)) {
+            return $this->saveData();
+        }
+
+        return false;
     }
 
     /**
-     * @param string $key
+     * @param $key
      *
      * @return bool
      */
     public function delete($key): bool
     {
-        // TODO: Implement delete() method.
+        if (parent::delete($key)) {
+            $this->saveData();
+        }
+
+        return false;
     }
 
     /**
@@ -56,7 +90,11 @@ class FileAdapter extends AbstractAdapter
      */
     public function setMultiple($values, $ttl = null): bool
     {
-        // TODO: Implement setMultiple() method.
+        if (parent::setMultiple($values, $ttl)) {
+            $this->saveData();
+        }
+
+        return false;
     }
 
     /**
@@ -66,7 +104,11 @@ class FileAdapter extends AbstractAdapter
      */
     public function deleteMultiple($keys): bool
     {
-        // TODO: Implement deleteMultiple() method.
+        if (parent::deleteMultiple($keys)) {
+            $this->saveData();
+        }
+
+        return false;
     }
 
     /**
@@ -74,23 +116,17 @@ class FileAdapter extends AbstractAdapter
      */
     public function clear(): bool
     {
-        // TODO: Implement clear() method.
+        parent::clear();
+
+        return $this->saveData();
     }
 
     /**
      * {@inheritDoc}
      */
-    public function get($key, $default = null)
+    public function close(): bool
     {
-        // TODO: Implement get() method.
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getMultiple($keys, $default = null)
-    {
-        // TODO: Implement getMultiple() method.
+        return $this->saveData();
     }
 
     /**

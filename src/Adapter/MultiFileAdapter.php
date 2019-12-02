@@ -3,11 +3,10 @@
 namespace Swoft\Cache\Adapter;
 
 use Swoft\Cache\Concern\AbstractAdapter;
+use Swoft\Cache\Concern\FileSystemTrait;
 use Swoft\Stdlib\Helper\Dir;
 use Swoft\Stdlib\Helper\Sys;
 use function file_exists;
-use function file_get_contents;
-use function file_put_contents;
 use function filemtime;
 use function glob;
 use function is_dir;
@@ -20,6 +19,8 @@ use function unlink;
  */
 class MultiFileAdapter extends AbstractAdapter
 {
+    use FileSystemTrait;
+
     /**
      * @var string
      */
@@ -59,7 +60,7 @@ class MultiFileAdapter extends AbstractAdapter
     public function set($key, $value, $ttl = null): bool
     {
         $file = $this->getCacheFile($key);
-        $ttl = $this->formatTTL($ttl);
+        $ttl  = $this->formatTTL($ttl);
 
         $string = $this->getSerializer()->serialize([
             self::TIME_KEY => $ttl > 0 ? time() + $ttl : 0,
@@ -155,41 +156,6 @@ class MultiFileAdapter extends AbstractAdapter
         }
 
         return $values;
-    }
-
-    /**
-     * @param string $file
-     *
-     * @return string
-     */
-    protected function doRead(string $file): string
-    {
-        if (!file_exists($file)) {
-            return '';
-        }
-
-        return (string)file_get_contents($file);
-    }
-
-    /**
-     * @param string $file
-     * @param string $data
-     *
-     * @return bool
-     */
-    protected function doWrite(string $file, string $data): bool
-    {
-        return file_put_contents($file, $data) !== false;
-    }
-
-    /**
-     * @param string $file
-     *
-     * @return bool
-     */
-    protected function doDelete(string $file): bool
-    {
-        return unlink($file);
     }
 
     /**
