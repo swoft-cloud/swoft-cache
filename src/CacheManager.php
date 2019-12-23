@@ -3,12 +3,14 @@
 namespace Swoft\Cache;
 
 use Psr\SimpleCache\CacheInterface;
+use Swoft\Bean\Annotation\Mapping\Bean;
 use Swoft\Cache\Contract\CacheAdapterInterface;
 
 /**
  * Class CacheManager
  *
  * @since 2.0.7
+ * @Bean("cacheManager")
  */
 class CacheManager implements CacheInterface
 {
