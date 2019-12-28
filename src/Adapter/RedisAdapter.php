@@ -49,7 +49,7 @@ class RedisAdapter extends AbstractAdapter
      */
     public function has($key): bool
     {
-        return $this->redis->exists($key);
+        return (bool)$this->redis->exists($key);
     }
 
     /**
