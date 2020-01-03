@@ -68,7 +68,7 @@ class CacheManager implements CacheInterface
      */
     public function delete($key)
     {
-        return $this->adapter->get($key);
+        return $this->adapter->delete($key);
     }
 
     /**
