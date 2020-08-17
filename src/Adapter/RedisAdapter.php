@@ -110,8 +110,9 @@ class RedisAdapter extends AbstractAdapter
     public function get($key, $default = null)
     {
         $this->checkKey($key);
+        $cacheKey = $this->getCacheKey($key);
 
-        $value = $this->redis->get($key);
+        $value = $this->redis->get($cacheKey);
         if ($value === false) {
             return $default;
         }
